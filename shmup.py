@@ -1,12 +1,9 @@
 # Pygame шаблон - скелет для нового проекта Pygame
 import pygame
 import random
-import os
+from os import path
 
-# настройка папки ассетов
-game_folder = os.path.dirname(__file__)
-img_folder = os.path.join(game_folder, 'img')
-
+# Размеры экрана и частота кадров
 WIDTH = 480
 HEIGHT = 600
 FPS = 60
@@ -23,8 +20,8 @@ YELLOW = (255,255,153)
 class Player(pygame.sprite.Sprite):
     def __init__(self):
         pygame.sprite.Sprite.__init__(self)
-        self.image = pygame.Surface((50, 40))
-        self.image.fill(GREEN)
+        self.image = pygame.transform.scale(player_img, (50, 38))
+        self.image.set_colorkey(BLACK)
         self.rect = self.image.get_rect()
         self.rect.centerx = WIDTH / 2
         self.rect.bottom = HEIGHT - 10
@@ -53,8 +50,8 @@ class Player(pygame.sprite.Sprite):
 class Mob(pygame.sprite.Sprite):
     def __init__(self):
         pygame.sprite.Sprite.__init__(self)
-        self.image = pygame.Surface((30, 40))
-        self.image.fill(RED)
+        self.image = meteor_img
+        self.image.set_colorkey(BLACK)
         self.rect = self.image.get_rect()
         self.rect.x = random.randrange(WIDTH - self.rect.width)
         self.rect.y = random.randrange(-100, -40)
@@ -72,8 +69,8 @@ class Mob(pygame.sprite.Sprite):
 class Bullet(pygame.sprite.Sprite):
     def __init__(self, x, y):
         pygame.sprite.Sprite.__init__(self)
-        self.image = pygame.Surface((10, 20))
-        self.image.fill(YELLOW)
+        self.image = bullet_img
+        self.image.set_colorkey(BLACK)
         self.rect = self.image.get_rect()
         self.rect.bottom = y
         self.rect.centerx = x
@@ -89,8 +86,16 @@ class Bullet(pygame.sprite.Sprite):
 pygame.init()
 pygame.mixer.init()
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
-player_img = pygame.image.load(os.path.join(img_folder, 'p1_jump.png')).convert()
-pygame.display.set_caption("My Game")
+pygame.display.set_caption("shmup!")
+
+# Загрузка всей игровой графики
+img_dir = path.join(path.dirname(__file__), 'img')
+background = pygame.image.load(path.join(img_dir, 'starfield.png')).convert()
+background_rect = background.get_rect()
+player_img = pygame.image.load(path.join(img_dir, "playerShip1_orange.png")).convert()
+meteor_img = pygame.image.load(path.join(img_dir, "meteorBrown_med1.png")).convert()
+bullet_img = pygame.image.load(path.join(img_dir, "laserRed16.png")).convert()
+
 clock = pygame.time.Clock()
 
 all_sprites = pygame.sprite.Group()
@@ -139,8 +144,10 @@ while running:
         mobs.add(m)
 
     # Рендеринг
-    screen.fill(BLUE)
+    screen.fill(BLACK)
+    screen.blit(background, background_rect)
     all_sprites.draw(screen)
+
     # После отрисовки всего, переворачиваем экран
     pygame.display.flip()
 
