@@ -150,6 +150,22 @@ class Explosion(pygame.sprite.Sprite):
                 self.rect = self.image.get_rect()
                 self.rect.center = center
 
+class Pow(pygame.sprite.Sprite):
+    def __init__(self, center):
+        pygame.sprite.Sprite.__init__(self)
+        self.type = random.choice(['shield', 'gun'])
+        self.image = powerup_images[self.type]
+        self.image.set_colorkey(BLACK)
+        self.rect = self.image.get_rect()
+        self.rect.center = center
+        self.speedy = 2
+
+    def update(self):
+        self.rect.y += self.speedy
+        # убить, если он сдвинется с нижней части экрана
+        if self.rect.top > HEIGHT:
+            self.kill()
+
 # Создаем игру и окно
 pygame.init()
 pygame.mixer.init()
@@ -177,6 +193,10 @@ for img in meteor_list:
     meteor_images.append(pygame.image.load(path.join(img_dir, img)).convert())
 
 bullet_img = pygame.image.load(path.join(img_dir, "laserRed16.png")).convert()
+
+powerup_images = {}
+powerup_images['shield'] = pygame.image.load(path.join(img_dir, 'shield_gold.png')).convert()
+powerup_images['gun'] = pygame.image.load(path.join(img_dir, 'bolt_gold.png')).convert()
 
 # Анимация
 explosion_anim = {}
@@ -222,6 +242,7 @@ for i in range(8):
     newmob()
 
 bullets = pygame.sprite.Group()
+powerups = pygame.sprite.Group()
 
 score = 0
 pygame.mixer.music.play(loops=-1)
@@ -289,14 +310,28 @@ while running:
     if player.lives == 0 and not death_explosion.alive():
         running = False
 
-    # Проверка, попала ли пуля по мобу
+    # проверьте, не попала ли пуля в моб
     hits = pygame.sprite.groupcollide(mobs, bullets, True, True)
     for hit in hits:
         score += 50 - hit.radius
         random.choice(expl_sounds).play()
         expl = Explosion(hit.rect.center, 'lg')
         all_sprites.add(expl)
+        if random.random() > 0.9:
+            pow = Pow(hit.rect.center)
+            all_sprites.add(pow)
+            powerups.add(pow)
         newmob()
+
+    # Проверка столкновений игрока и улучшения
+    hits = pygame.sprite.spritecollide(player, powerups, True)
+    for hit in hits:
+        if hit.type == 'shield':
+            player.shield += random.randrange(10, 30)
+            if player.shield >= 100:
+                player.shield = 100
+        if hit.type == 'gun':
+            pass
 
     # Рендеринг
     screen.fill(BLACK)
