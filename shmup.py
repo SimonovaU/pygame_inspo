@@ -17,6 +17,9 @@ GREEN = (0, 255, 0)
 BLUE = (0, 0, 255)
 YELLOW = (255,255,153)
 
+# Тайм-аут для бонусов
+POWERUP_TIME = 5000
+
 
 class Player(pygame.sprite.Sprite):
     def __init__(self):
@@ -35,6 +38,8 @@ class Player(pygame.sprite.Sprite):
         self.lives = 3
         self.hidden = False
         self.hide_timer = pygame.time.get_ticks()
+        self.power = 1
+        self.power_time = pygame.time.get_ticks()
 
     def update(self):
         # показать, если скрыто
@@ -58,20 +63,37 @@ class Player(pygame.sprite.Sprite):
         if self.rect.left < 0:
             self.rect.left = 0
 
+        # тайм-аут для бонусов
+        if self.power >= 2 and pygame.time.get_ticks() - self.power_time > POWERUP_TIME:
+            self.power -= 1
+            self.power_time = pygame.time.get_ticks()
+
     def shoot(self):
         now = pygame.time.get_ticks()
-
         if now - self.last_shot > self.shoot_delay:
             self.last_shot = now
-            bullet = Bullet(self.rect.centerx, self.rect.top)
-            all_sprites.add(bullet)
-            bullets.add(bullet)
-            shoot_sound.play()
+            if self.power == 1:
+                bullet = Bullet(self.rect.centerx, self.rect.top)
+                all_sprites.add(bullet)
+                bullets.add(bullet)
+                shoot_sound.play()
+            if self.power >= 2:
+                bullet1 = Bullet(self.rect.left, self.rect.centery)
+                bullet2 = Bullet(self.rect.right, self.rect.centery)
+                all_sprites.add(bullet1)
+                all_sprites.add(bullet2)
+                bullets.add(bullet1)
+                bullets.add(bullet2)
+                shoot_sound.play()
 
     def hide(self):  # временно скрыть игрока
         self.hidden = True
         self.hide_timer = pygame.time.get_ticks()
         self.rect.center = (WIDTH / 2, HEIGHT + 200)
+
+    def powerup(self):
+        self.power += 1
+        self.power_time = pygame.time.get_ticks()
 
 
 class Mob(pygame.sprite.Sprite):
@@ -219,6 +241,8 @@ for i in range(9):
 # Загрузка мелодий игры
 shoot_sound = pygame.mixer.Sound(path.join(snd_dir, 'pew.wav'))
 death_explosion_sound = pygame.mixer.Sound(path.join(snd_dir, 'rumble1.ogg'))
+shield_sound = pygame.mixer.Sound(path.join(snd_dir, 'shield.wav'))
+power_sound = pygame.mixer.Sound(path.join(snd_dir, 'powerup.wav'))
 expl_sounds = []
 for snd in ['expl3.wav', 'expl6.wav']:
     expl_sounds.append(pygame.mixer.Sound(path.join(snd_dir, snd)))
@@ -327,11 +351,14 @@ while running:
     hits = pygame.sprite.spritecollide(player, powerups, True)
     for hit in hits:
         if hit.type == 'shield':
+            shield_sound.play()
             player.shield += random.randrange(10, 30)
             if player.shield >= 100:
                 player.shield = 100
         if hit.type == 'gun':
-            pass
+            player.powerup()
+            power_sound.play()
+
 
     # Рендеринг
     screen.fill(BLACK)
