@@ -1,3 +1,5 @@
 /assets/
 /venv/
 .idea/
+/build/
+/dist/

@@ -3,6 +3,7 @@
 import pygame
 import random
 from os import path
+import sys
 
 # Размеры экрана и частота кадров
 WIDTH = 480
@@ -194,9 +195,12 @@ pygame.mixer.init()
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("shmup!")
 
-
 img_dir = path.join(path.dirname(__file__), 'img')
 snd_dir = path.join(path.dirname(__file__), 'snd')
+
+if hasattr(sys, "_MEIPASS"):
+    img_dir = path.join(sys._MEIPASS, 'img')
+    snd_dir = path.join(sys._MEIPASS, 'snd')
 
 # Загрузка всей игровой графики
 background = pygame.image.load(path.join(img_dir, 'starfield.png')).convert()
